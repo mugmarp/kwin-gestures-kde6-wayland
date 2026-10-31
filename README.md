@@ -6,51 +6,28 @@ Fork of [gbytedev/kwin-gestures](https://github.com/gbytedev/kwin-gestures) with
 
 **Upstream kwin-gestures 0.4.0 fails to build on KWin ≥ 6.3 (Plasma 6.1+)** due to API changes in `KWin::InputEventFilter` gesture handling methods.
 
-### API Incompatibility
-
 | KWin Version | Gesture Method Signatures |
 |--------------|---------------------------|
 | **≤ 6.2** (legacy) | `bool holdGestureBegin(int fingerCount, std::chrono::microseconds time)` |
 | **≥ 6.3** (current) | `bool holdGestureBegin(PointerHoldGestureBeginEvent *event)` |
 
-The upstream code uses the legacy signatures, causing **override errors** and **incomplete type errors** when building against KWin 6.3+ headers.
+The upstream code uses legacy signatures, causing **override errors** and **incomplete type errors** when building against KWin 6.3+ headers.
 
-### Affected Distributions
-- **Kubuntu 26.04** (KWin 6.6.6) ✅ Fixed
-- **Fedora 41+** (KWin 6.2+) ✅ Fixed
-- **Arch Linux** (rolling, KWin 6.3+) ✅ Fixed
-- **openSUSE Tumbleweed** (KWin 6.3+) ✅ Fixed
+### ✅ Fixed Distributions
+- **Kubuntu 26.04** (KWin 6.6.6)
+- **Fedora 41+** (KWin 6.2+)
+- **Arch Linux** (rolling, KWin 6.3+)
+- **openSUSE Tumbleweed** (KWin 6.3+)
 
-## 🔧 Changes Made
+## 🔧 Changes (Summary)
 
-### `src/kwin/inputfilter.h`
-- Added `#ifdef KWIN_6_3_OR_GREATER` conditional overloads for all 12 gesture methods
-- New signatures use KWin event struct pointers (`Pointer*Gesture*Event*`)
+| File | Change |
+|------|--------|
+| `src/kwin/inputfilter.h` | Conditional overloads for 12 gesture methods using `KWIN_6_3_OR_GREATER` |
+| `src/kwin/inputfilter.cpp` | Dual API implementation, event struct field mapping, member function pointers for `processSpies/processFilters` |
+| `src/kwin/CMakeLists.txt` | Unchanged — upstream already detects KWin version |
 
-### `src/kwin/inputfilter.cpp`
-- Implemented both API versions (legacy + KWin 6.3+)
-- **Event struct field mapping:**
-  ```cpp
-  // PointerHoldGestureBeginEvent
-  event->fingerCount, event->time
-  
-  // PointerSwipeGestureUpdateEvent  
-  event->delta, event->time
-  
-  // PointerPinchGestureUpdateEvent
-  event->scale, event->angleDelta, event->delta, event->time
-  ```
-- **Fixed `processSpies`/`processFilters` calls** — changed from lambdas to member function pointers:
-  ```cpp
-  // Old (broken on KWin 6.3+)
-  KWin::input()->processSpies([&time](auto &&spy) { spy->holdGestureCancelled(time); });
-  
-  // New (works on all versions)
-  KWin::input()->processSpies(&KWin::InputEventSpy::holdGestureCancelled, &cancelEvent);
-  ```
-
-### `src/kwin/CMakeLists.txt` (already present in upstream)
-- Detects KWin version and defines `KWIN_6_2_OR_GREATER` / `KWIN_6_3_OR_GREATER`
+→ **[Full technical details](docs/technical-changes.md)** (event struct mapping, code diffs, hold gesture synthesis, screen lock handling)
 
 ## 📦 Build Instructions (Kubuntu 26.04)
 
@@ -61,8 +38,8 @@ sudo apt install -y git cmake g++ extra-cmake-modules qt6-tools-dev \
   libkf6kcmutils-dev libyaml-cpp-dev libxkbcommon-dev libdrm-dev
 
 # Build from this fork
-git clone https://github.com/mugmarp/kwin-gestures
-cd kwin-gestures
+git clone https://github.com/mugmarp/kwin-gestures-kde6-wayland
+cd kwin-gestures-kde6-wayland
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr
 make -j$(nproc)
@@ -79,10 +56,10 @@ sudo make install
 
 | Limitation | Status | Notes |
 |------------|--------|-------|
-| **Hold gesture `holdGestureUpdate`** | ⚠️ Partial | KWin 6.3+ has no `holdGestureUpdate` event — synthesized via timer (1ms interval). May feel less responsive than native. |
-| **Screen lock handling** | ✅ Fixed | Properly guarded with `#ifndef KWIN_6_2_OR_GREATER` for older KWin. |
-| **X11 support** | ❌ Not supported | Upstream limitation — Wayland only. |
-| **3/4-finger pinch on 2-finger touchpads** | ⚠️ Hardware limit | libinput interprets as swipe; workaround: move 2 fingers opposite. |
+| **Hold gesture `holdGestureUpdate`** | ⚠️ Partial | KWin 6.3+ has no event — synthesized via 1ms timer |
+| **Screen lock handling** | ✅ Fixed | Guarded for older KWin |
+| **X11 support** | ❌ Not supported | Upstream — Wayland only |
+| **3/4-finger pinch on 2-finger touchpads** | ⚠️ Hardware limit | libinput interprets as swipe; move 2 fingers opposite |
 
 ## 🔄 Upstream Tracking
 
@@ -91,7 +68,6 @@ sudo make install
 | `main` | `gbytedev/kwin-gestures@main` | ✅ Patched for KWin 6.3+ |
 | `upstream/main` | — | Tracks upstream for rebasing |
 
-Check for upstream updates:
 ```bash
 git fetch upstream
 git log --oneline upstream/main..main
