@@ -1,4 +1,106 @@
-# KWin Gestures
+# KWin Gestures — KWin 6.3+ Compatible Fork
+
+Fork of [gbytedev/kwin-gestures](https://github.com/gbytedev/kwin-gestures) with patches for KWin 6.3+ (Plasma 6.1+) API compatibility.
+
+## 🎯 Problem Solved
+
+**Upstream kwin-gestures 0.4.0 fails to build on KWin ≥ 6.3 (Plasma 6.1+)** due to API changes in `KWin::InputEventFilter` gesture handling methods.
+
+### API Incompatibility
+
+| KWin Version | Gesture Method Signatures |
+|--------------|---------------------------|
+| **≤ 6.2** (legacy) | `bool holdGestureBegin(int fingerCount, std::chrono::microseconds time)` |
+| **≥ 6.3** (current) | `bool holdGestureBegin(PointerHoldGestureBeginEvent *event)` |
+
+The upstream code uses the legacy signatures, causing **override errors** and **incomplete type errors** when building against KWin 6.3+ headers.
+
+### Affected Distributions
+- **Kubuntu 26.04** (KWin 6.6.6) ✅ Fixed
+- **Fedora 41+** (KWin 6.2+) ✅ Fixed
+- **Arch Linux** (rolling, KWin 6.3+) ✅ Fixed
+- **openSUSE Tumbleweed** (KWin 6.3+) ✅ Fixed
+
+## 🔧 Changes Made
+
+### `src/kwin/inputfilter.h`
+- Added `#ifdef KWIN_6_3_OR_GREATER` conditional overloads for all 12 gesture methods
+- New signatures use KWin event struct pointers (`Pointer*Gesture*Event*`)
+
+### `src/kwin/inputfilter.cpp`
+- Implemented both API versions (legacy + KWin 6.3+)
+- **Event struct field mapping:**
+  ```cpp
+  // PointerHoldGestureBeginEvent
+  event->fingerCount, event->time
+  
+  // PointerSwipeGestureUpdateEvent  
+  event->delta, event->time
+  
+  // PointerPinchGestureUpdateEvent
+  event->scale, event->angleDelta, event->delta, event->time
+  ```
+- **Fixed `processSpies`/`processFilters` calls** — changed from lambdas to member function pointers:
+  ```cpp
+  // Old (broken on KWin 6.3+)
+  KWin::input()->processSpies([&time](auto &&spy) { spy->holdGestureCancelled(time); });
+  
+  // New (works on all versions)
+  KWin::input()->processSpies(&KWin::InputEventSpy::holdGestureCancelled, &cancelEvent);
+  ```
+
+### `src/kwin/CMakeLists.txt` (already present in upstream)
+- Detects KWin version and defines `KWIN_6_2_OR_GREATER` / `KWIN_6_3_OR_GREATER`
+
+## 📦 Build Instructions (Kubuntu 26.04)
+
+```bash
+# Dependencies
+sudo apt install -y git cmake g++ extra-cmake-modules qt6-tools-dev \
+  kwin-wayland kwin-dev libkf6configwidgets-dev gettext \
+  libkf6kcmutils-dev libyaml-cpp-dev libxkbcommon-dev libdrm-dev
+
+# Build from this fork
+git clone https://github.com/mugmarp/kwin-gestures
+cd kwin-gestures
+mkdir build && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+make -j$(nproc)
+sudo make install
+```
+
+## 🚀 Enable
+
+1. **System Settings → Desktop Effects → Tools → Gestures** (enable)
+2. **System Settings → Input Devices → Touchpad → Gestures** (configure)
+3. Log out/in or `kwin_wayland --replace &`
+
+## ⚠️ Known Limitations
+
+| Limitation | Status | Notes |
+|------------|--------|-------|
+| **Hold gesture `holdGestureUpdate`** | ⚠️ Partial | KWin 6.3+ has no `holdGestureUpdate` event — synthesized via timer (1ms interval). May feel less responsive than native. |
+| **Screen lock handling** | ✅ Fixed | Properly guarded with `#ifndef KWIN_6_2_OR_GREATER` for older KWin. |
+| **X11 support** | ❌ Not supported | Upstream limitation — Wayland only. |
+| **3/4-finger pinch on 2-finger touchpads** | ⚠️ Hardware limit | libinput interprets as swipe; workaround: move 2 fingers opposite. |
+
+## 🔄 Upstream Tracking
+
+| Branch | Base | Status |
+|--------|------|--------|
+| `main` | `gbytedev/kwin-gestures@main` | ✅ Patched for KWin 6.3+ |
+| `upstream/main` | — | Tracks upstream for rebasing |
+
+Check for upstream updates:
+```bash
+git fetch upstream
+git log --oneline upstream/main..main
+```
+
+---
+
+# Original Upstream README
+
 Custom touchpad gestures for Plasma 6.
 
 X11 is currently not supported.
@@ -21,29 +123,29 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
   <summary>NixOS (flakes)</summary>
   <br>
 
-``flake.nix``:
-  ```nix
-  {
-    inputs = {
-      nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+`flake.nix`:
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-      kwin-gestures = {
-        url = "github:taj-ny/kwin-gestures";
-        inputs.nixpkgs.follows = "nixpkgs";
-      };
+    kwin-gestures = {
+      url = "github:taj-ny/kwin-gestures";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
-  }
-  ```
+  };
+}
+```
 
-  ```nix
-  { inputs, pkgs, ... }:
+```nix
+{ inputs, pkgs, ... }:
 
-  {
-    environment.systemPackages = [
-      inputs.kwin-gestures.packages.${pkgs.system}.default
-    ];
-  }
-  ```
+{
+  environment.systemPackages = [
+    inputs.kwin-gestures.packages.${pkgs.system}.default
+  ];
+}
+```
 </details>
 
 # Building from source
@@ -121,3 +223,7 @@ Depending on the touchpad, 3 or 4-finger pinch gestures may sometimes be incorre
 
 # Credits
 - [KWin](https://invent.kde.org/plasma/kwin) - Gesture recognition code (parts of it), sending keystrokes
+
+## License
+
+GPL-2.0-or-later (same as upstream KWin)
