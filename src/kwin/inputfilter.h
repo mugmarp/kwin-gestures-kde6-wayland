@@ -23,6 +23,23 @@ public:
 
     void setTouchpadGestureRecognizer(const std::shared_ptr<libgestures::GestureRecognizer> &gestureRecognizer);
 
+#ifdef KWIN_6_3_OR_GREATER
+    // KWin 6.3+ uses event structs for gestures
+    bool holdGestureBegin(KWin::PointerHoldGestureBeginEvent *event) override;
+    void holdGestureUpdate(const qreal &delta);
+    bool holdGestureEnd(KWin::PointerHoldGestureEndEvent *event) override;
+    bool holdGestureCancelled(KWin::PointerHoldGestureCancelEvent *event) override;
+
+    bool swipeGestureBegin(KWin::PointerSwipeGestureBeginEvent *event) override;
+    bool swipeGestureUpdate(KWin::PointerSwipeGestureUpdateEvent *event) override;
+    bool swipeGestureEnd(KWin::PointerSwipeGestureEndEvent *event) override;
+    bool swipeGestureCancelled(KWin::PointerSwipeGestureCancelEvent *event) override;
+
+    bool pinchGestureBegin(KWin::PointerPinchGestureBeginEvent *event) override;
+    bool pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *event) override;
+    bool pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event) override;
+    bool pinchGestureCancelled(KWin::PointerPinchGestureCancelEvent *event) override;
+#else
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     void holdGestureUpdate(const qreal &delta);
     bool holdGestureEnd(std::chrono::microseconds time) override;
@@ -37,6 +54,7 @@ public:
     bool pinchGestureUpdate(qreal scale, qreal angleDelta, const QPointF &delta, std::chrono::microseconds time) override;
     bool pinchGestureEnd(std::chrono::microseconds time) override;
     bool pinchGestureCancelled(std::chrono::microseconds time) override;
+#endif
 
 private:
     std::shared_ptr<libgestures::GestureRecognizer> m_touchpadGestureRecognizer = std::make_shared<libgestures::GestureRecognizer>();
