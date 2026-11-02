@@ -1,0 +1,111 @@
+# Windows 11-like gestures (stateless - no toggle)
+# Place at ~/.config/kwingestures.yml
+# Reload: qdbus6 org.kde.KWin /KWin reconfigure
+
+touchpad:
+  speed:
+    swipe_threshold: 12
+    pinch_in_threshold: 0.03
+    pinch_out_threshold: 0.06
+    events: 3
+
+  delta_multiplier: 1.2
+
+  gestures:
+    # ===== 3-FINGER SWIPES =====
+
+    # 3-finger swipe UP → Task View / Overview
+    - type: swipe
+      fingers: 3
+      direction: up
+      speed: any
+      threshold: 0.25
+      actions:
+        - plasma_shortcut: kwin,Overview
+
+    # 3-finger swipe DOWN → Show Desktop / Minimize all
+    - type: swipe
+      fingers: 3
+      direction: down
+      speed: any
+      threshold: 0.25
+      actions:
+        - plasma_shortcut: kwin,Show Desktop
+
+    # 3-finger swipe LEFT/RIGHT → Switch apps (Alt+Tab)
+    - type: swipe
+      fingers: 3
+      direction: left_right
+      speed: any
+      threshold: 0.25
+      actions:
+        - plasma_shortcut: kwin,Walk Through Windows
+
+    # ===== 4-FINGER SWIPES =====
+
+    # 4-finger swipe LEFT → Previous virtual desktop
+    - type: swipe
+      fingers: 4
+      direction: left
+      speed: any
+      threshold: 0.25
+      actions:
+        - plasma_shortcut: kwin,Switch One Desktop to the Left
+
+    # 4-finger swipe RIGHT → Next virtual desktop
+    - type: swipe
+      fingers: 4
+      direction: right
+      speed: any
+      threshold: 0.25
+      actions:
+        - plasma_shortcut: kwin,Switch One Desktop to the Right
+
+    # ===== TAP GESTURES =====
+
+    # 3-finger tap → Search (Win+Q)
+    - type: hold
+      fingers: 3
+      speed: fast
+      threshold: 0.05
+      actions:
+        - plasma_shortcut: org_kde_krunner_desktop,_launch
+
+    # 4-finger tap → Dashboard
+    - type: hold
+      fingers: 4
+      speed: fast
+      threshold: 0.05
+      actions:
+        - plasma_shortcut: plasmashell,show dashboard
+
+    # 2-finger tap → Right-click
+    - type: hold
+      fingers: 2
+      speed: fast
+      threshold: 0.05
+      actions:
+        - input:
+            - mouse: [ RIGHT ]
+
+    # ===== PINCH GESTURES =====
+
+    # 2-finger pinch IN → Zoom out (Ctrl+-)
+    - type: pinch
+      fingers: 2
+      direction: in
+      speed: any
+      threshold: 0.1
+      actions:
+        - input:
+            - keyboard: [ LEFTCTRL+MINUS ]
+
+    # 2-finger pinch OUT → Zoom in (Ctrl+=)
+    - type: pinch
+      fingers: 2
+      direction: out
+      speed: any
+      threshold: 0.1
+      actions:
+        - input:
+            - keyboard: [ LEFTCTRL+EQUAL ]
