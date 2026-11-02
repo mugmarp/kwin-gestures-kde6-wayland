@@ -106,6 +106,9 @@ public:
      */
     SwipeDirection lastSwipeDirection(const uint8_t &fingerCount) const;
 
+    // Accessors for stateful gesture support
+    const std::vector<std::shared_ptr<Gesture>> &gestures() const { return m_gestures; }
+
 private:
     template<class TGesture>
     void gestureBegin(const uint8_t &fingerCount, std::vector<std::shared_ptr<TGesture>> &activeGestures);

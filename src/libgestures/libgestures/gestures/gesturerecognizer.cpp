@@ -289,5 +289,3 @@ SwipeDirection GestureRecognizer::lastSwipeDirection(const uint8_t &fingerCount)
 }
 
 }
-
-}

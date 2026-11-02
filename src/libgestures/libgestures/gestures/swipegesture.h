@@ -1,19 +1,10 @@
 #pragma once
 
+#include "swipedirection.h"
 #include "gesture.h"
 
 namespace libgestures
 {
-
-enum class SwipeDirection {
-    Any,
-    Left,
-    Right,
-    Down,
-    Up,
-    LeftRight,
-    UpDown
-};
 
 class SwipeGesture : public Gesture
 {

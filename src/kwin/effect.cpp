@@ -64,9 +64,11 @@ void Effect::reconfigure(ReconfigureFlags flags)
         auto gestureRecognizer = config["touchpad"].as<std::shared_ptr<libgestures::GestureRecognizer>>();
 
         // Set the gesture recognizer on all conditions for stateful gesture support
-        for (const auto &gesture : gestureRecognizer->m_gestures) {
-            for (const auto &condition : gesture->m_conditions) {
-                condition->setGestureRecognizer(gestureRecognizer.get());
+        for (const auto &gesture : gestureRecognizer->gestures()) {
+            for (const auto &condition : gesture->conditions()) {
+                // Need to cast away const since setGestureRecognizer is not const
+                // This is safe because we're only setting a pointer that doesn't affect logical constness
+                const_cast<libgestures::Condition *>(condition.get())->setGestureRecognizer(gestureRecognizer.get());
             }
         }
 

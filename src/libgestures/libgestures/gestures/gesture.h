@@ -86,6 +86,8 @@ private:
 
     qreal m_absoluteAccumulatedDelta = 0;
     bool m_hasStarted = false;
+
+    friend class GestureRecognizer;
 };
 
 }

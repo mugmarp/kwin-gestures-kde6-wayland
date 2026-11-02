@@ -1,12 +1,14 @@
 #pragma once
 
-#include "gesturerecognizer.h"
 #include "windowinfoprovider.h"
+#include "gestures/swipedirection.h"
 #include <QRegularExpression>
 #include <optional>
 
 namespace libgestures
 {
+
+class GestureRecognizer;
 
 enum class ConditionType {
     WindowState,

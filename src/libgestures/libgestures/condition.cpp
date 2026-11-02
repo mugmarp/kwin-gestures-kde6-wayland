@@ -1,4 +1,5 @@
 #include "condition.h"
+#include "gestures/gesturerecognizer.h"
 
 namespace libgestures
 {
