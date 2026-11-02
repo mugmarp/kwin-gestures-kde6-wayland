@@ -198,6 +198,17 @@ void GestureRecognizer::swipeGestureCancel()
 
 bool GestureRecognizer::swipeGestureEnd()
 {
+    // Store the last swipe direction for stateful gestures
+    // We need to determine the direction from the active gestures
+    if (!m_activeSwipeGestures.empty()) {
+        // Use the direction from the first active gesture that matches the overall direction
+        for (const auto &gesture : m_activeSwipeGestures) {
+            if (gesture->direction() != SwipeDirection::Any) {
+                m_lastSwipeDirection[gesture->fingers()] = gesture->direction();
+                break;
+            }
+        }
+    }
     return gestureEnd(m_activeSwipeGestures);
 }
 
@@ -266,6 +277,17 @@ void GestureRecognizer::resetMembers()
     m_currentSwipeAxis = Axis::None;
     m_currentSwipeDelta = QPointF();
     m_speed = GestureSpeed::Any;
+}
+
+SwipeDirection GestureRecognizer::lastSwipeDirection(const uint8_t &fingerCount) const
+{
+    auto it = m_lastSwipeDirection.find(fingerCount);
+    if (it != m_lastSwipeDirection.end()) {
+        return it->second;
+    }
+    return SwipeDirection::Any;
+}
+
 }
 
 }

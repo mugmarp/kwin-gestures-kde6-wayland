@@ -33,6 +33,11 @@ public:
     void setSpeed(const GestureSpeed &speed);
     void setThresholds(const qreal &minimum, const qreal &maximum);
     void setFingers(const uint8_t &minimum, const uint8_t &maximum);
+
+    // Accessors for stateful gesture support
+    const std::vector<std::shared_ptr<const Condition>> &conditions() const { return m_conditions; }
+    uint8_t fingers() const { return m_minimumFingers; }
+
 signals:
     /**
      * Emitted when the gesture has been cancelled.

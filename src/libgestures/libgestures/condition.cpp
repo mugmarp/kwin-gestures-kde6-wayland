@@ -5,12 +5,20 @@ namespace libgestures
 
 bool Condition::isSatisfied() const
 {
-    const auto windowData = WindowInfoProvider::implementation()->activeWindow();
-    if (!windowData)
-        return false;
+    switch (m_conditionType) {
+    case ConditionType::PreviousSwipeDirection:
+        return isPreviousSwipeDirectionConditionSatisfied();
 
-    return isWindowClassRegexSubConditionSatisfied(windowData.value())
-        && isWindowStateSubConditionSatisfied(windowData.value());
+    case ConditionType::WindowState:
+    default: {
+        const auto windowData = WindowInfoProvider::implementation()->activeWindow();
+        if (!windowData)
+            return false;
+
+        return isWindowClassRegexSubConditionSatisfied(windowData.value())
+            && isWindowStateSubConditionSatisfied(windowData.value());
+    }
+    }
 }
 
 bool Condition::isWindowClassRegexSubConditionSatisfied(const WindowInfo &data) const
@@ -35,6 +43,20 @@ bool Condition::isWindowStateSubConditionSatisfied(const WindowInfo &data) const
     return m_negateWindowState == !satisfied;
 }
 
+bool Condition::isPreviousSwipeDirectionConditionSatisfied() const
+{
+    if (!m_gestureRecognizer) {
+        return false;
+    }
+
+    if (m_previousSwipeFingerCount == 0) {
+        return false;
+    }
+
+    const auto lastDirection = m_gestureRecognizer->lastSwipeDirection(m_previousSwipeFingerCount);
+    return lastDirection == m_previousSwipeDirection;
+}
+
 void Condition::setWindowClass(const QRegularExpression &windowClassRegex)
 {
     m_windowClass = windowClassRegex;
@@ -53,6 +75,26 @@ void Condition::setNegateWindowClass(const bool &negate)
 void Condition::setNegateWindowState(const bool &negate)
 {
     m_negateWindowState = negate;
+}
+
+void Condition::setConditionType(const ConditionType &type)
+{
+    m_conditionType = type;
+}
+
+void Condition::setPreviousSwipeDirection(const SwipeDirection &direction)
+{
+    m_previousSwipeDirection = direction;
+}
+
+void Condition::setPreviousSwipeFingerCount(const uint8_t &fingerCount)
+{
+    m_previousSwipeFingerCount = fingerCount;
+}
+
+void Condition::setGestureRecognizer(const GestureRecognizer *recognizer)
+{
+    m_gestureRecognizer = recognizer;
 }
 
 }

@@ -584,6 +584,29 @@ struct convert<std::shared_ptr<libgestures::Condition>>
     {
         condition = std::make_shared<libgestures::Condition>();
 
+        const auto typeNode = node["type"];
+        if (typeNode.IsDefined()) {
+            const auto typeRaw = typeNode.as<QString>();
+            if (typeRaw == "previous_swipe_direction") {
+                condition->setConditionType(libgestures::ConditionType::PreviousSwipeDirection);
+
+                const auto directionNode = node["direction"];
+                if (directionNode.IsDefined()) {
+                    condition->setPreviousSwipeDirection(directionNode.as<libgestures::SwipeDirection>());
+                }
+
+                const auto fingersNode = node["fingers"];
+                if (fingersNode.IsDefined()) {
+                    condition->setPreviousSwipeFingerCount(fingersNode.as<uint8_t>());
+                }
+            } else {
+                throw Exception(node.Mark(), "Invalid condition type");
+            }
+        } else {
+            // Default to WindowState condition for backward compatibility
+            condition->setConditionType(libgestures::ConditionType::WindowState);
+        }
+
         const auto negatedNode = node["negate"];
         if (negatedNode.IsDefined()) {
             for (const auto &negatedRaw : negatedNode.as<QStringList>(QStringList())) {

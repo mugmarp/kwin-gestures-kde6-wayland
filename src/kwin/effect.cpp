@@ -62,6 +62,14 @@ void Effect::reconfigure(ReconfigureFlags flags)
         const auto config = YAML::LoadFile(configFile.toStdString());
         m_autoReload = config["autoreload"].as<bool>(true);
         auto gestureRecognizer = config["touchpad"].as<std::shared_ptr<libgestures::GestureRecognizer>>();
+
+        // Set the gesture recognizer on all conditions for stateful gesture support
+        for (const auto &gesture : gestureRecognizer->m_gestures) {
+            for (const auto &condition : gesture->m_conditions) {
+                condition->setGestureRecognizer(gestureRecognizer.get());
+            }
+        }
+
         m_inputEventFilter->setTouchpadGestureRecognizer(gestureRecognizer);
     } catch (const YAML::Exception &e) {
         qCritical(KWIN_GESTURES).noquote() << QStringLiteral("Failed to load configuration: ") + QString::fromStdString(e.msg)

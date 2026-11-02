@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QPointF>
+#include <unordered_map>
 
 namespace libgestures
 {
@@ -98,6 +99,13 @@ public:
     bool pinchGestureEnd();
     void pinchGestureCancel();
 
+    /**
+     * Returns the last swipe direction for the given finger count.
+     * @param fingerCount The number of fingers used in the swipe gesture.
+     * @return The last swipe direction, or SwipeDirection::Any if no previous swipe was recorded.
+     */
+    SwipeDirection lastSwipeDirection(const uint8_t &fingerCount) const;
+
 private:
     template<class TGesture>
     void gestureBegin(const uint8_t &fingerCount, std::vector<std::shared_ptr<TGesture>> &activeGestures);
@@ -130,6 +138,9 @@ private:
     qreal m_accumulatedAbsoluteSampledDelta = 0;
 
     qreal m_deltaMultiplier = 1.0;
+
+    // Track last swipe direction per finger count for stateful gestures
+    std::unordered_map<uint8_t, SwipeDirection> m_lastSwipeDirection;
 
     friend struct YAML::convert<std::shared_ptr<GestureRecognizer>>;
     friend class TestGestureRecognizer;
