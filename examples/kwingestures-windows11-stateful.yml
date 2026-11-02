@@ -57,23 +57,23 @@ touchpad:
 
     # ===== 4-FINGER SWIPES =====
 
-    # 4-finger swipe LEFT → Previous virtual desktop
+    # 4-finger swipe LEFT → Next virtual desktop (Windows: swipe left = push left, reveal next)
     - type: swipe
       fingers: 4
       direction: left
       speed: any
       threshold: 0.25
       actions:
-        - plasma_shortcut: kwin,Switch One Desktop to the Left
+        - plasma_shortcut: kwin,Switch One Desktop to the Right
 
-    # 4-finger swipe RIGHT → Next virtual desktop
+    # 4-finger swipe RIGHT → Previous virtual desktop (Windows: swipe right = push right, reveal previous)
     - type: swipe
       fingers: 4
       direction: right
       speed: any
       threshold: 0.25
       actions:
-        - plasma_shortcut: kwin,Switch One Desktop to the Right
+        - plasma_shortcut: kwin,Switch One Desktop to the Left
 
     # ===== TAP GESTURES =====
 
